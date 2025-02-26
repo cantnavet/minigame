@@ -631,7 +631,7 @@
             difficultyTimer++;
             if(difficultyTimer%600 === 0) {
                 if (damageDe >= 800){
-                    damageDe *= 1.01;
+                    damageDe *= 1.015;
                 }else{
                     damageDe = Math.min(800,Math.max(1.2,enemyHealthRate/1.05)*damageDe);
                 }
