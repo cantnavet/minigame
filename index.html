@@ -75,7 +75,7 @@
             gameTime = 0;
             lastFrameTime = Date.now();
             stops = false;
-            damageDe = 2;
+            damageDe = 2.5;
             difficultyTimer = 0;
             bullets = [];
             enemies = [];
@@ -193,7 +193,7 @@
         function drawEnemies() {
             enemies.forEach(enemy => {
                 // 绘制敌人主体
-                ctx.fillStyle = `hsl(${enemy.health * 100 /enemy.maxHealth * Math.log(1+enemy.health)**(1/3)}, 70%, 50%)`;
+                ctx.fillStyle = `hsl(${enemy.health * 20 /enemy.maxHealth * (3+Math.log(1+enemy.health))}, 70%, 50%)`;
                 ctx.beginPath();
                 ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
                 ctx.fill();
@@ -320,6 +320,7 @@
             ctx.fillText(`时间: ${(gameTime)}`, 50, 60);
              // ctx.fillText(`De: ${(damageDe.toFixed(2))}`, 50, 150);
              // ctx.fillText(`BW: ${(bulletWeight.toFixed(2))}`, 50, 180);
+             // ctx.fillText(`EHR: ${(enemyHealthRate.toFixed(2))}`, 50, 210);
             
             // if(stops) {
             //     ctx.fillStyle = '#fff';
@@ -579,7 +580,7 @@
             switch(types) {
                 case '攻速':
                     if (player.fireRate >= 5 ){
-                        player.fireRate = Math.max(5, player.fireRate - Math.floor(0.5+value*player.fireRate/10));
+                        player.fireRate = Math.max(5, player.fireRate - (0.5+value*player.fireRate/10));
                         // if (player.fireRate - value*50 < 100){
                         //     player.fireRate = Math.max(1, player.fireRate - Math.floor(value*player.fireRate/10));
                         // }else{
@@ -622,10 +623,10 @@
         function increaseDifficulty() {
             difficultyTimer++;
             if(difficultyTimer%600 === 0) {
-                if (damageDe >= 200){
+                if (damageDe >= 550){
                     damageDe *= 1.01;
                 }else{
-                    damageDe = Math.min(400,1.2*damageDe);
+                    damageDe = Math.min(600,enemyHealthRate*damageDe/1.01);
                 }
                 enemyHealthRate = Math.max(1.2,enemyHealthRate/1.02);
                 enemyHealthBase *= enemyHealthRate;
