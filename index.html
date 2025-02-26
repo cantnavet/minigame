@@ -55,19 +55,22 @@
         let stopTime;
         let lastSec = 0;
         let mouseX = canvas.width/2;
+        let lastDelta;
         
         function initGame() {
             player = {
                 x: canvas.width/2,
                 y: canvas.height - 30,
-                speed: 9,
+                speed: 5,
                 bulletSpeed: 5,
                 fireRate: 500,
                 damage: 1,
                 bulletWidth: 3,
                 bulletCount: 1,  // 初始弹道数量
-                bulletSpread: 12 // 子弹间距
+                bulletSpread: 12, // 子弹间距
+                bulletX: 1
             };
+            bulletWeight = 1;
             kickbackDistance = 2;
             gameTime = 0;
             lastFrameTime = Date.now();
@@ -85,8 +88,10 @@
             enemyHealthRate = 1.7;
             enemySpawnRate = 2000;
             fillSpeedBase = 0.7
+            lastFire = Date.now();
             mouseX = canvas.width/2;  // 重置鼠标位置
             restartBtn.style.display = 'none';
+            lastDelta = 0;
         }
 
                 // 添加鼠标事件监听
@@ -147,7 +152,7 @@
                 // 生成有效位置
                 for(let i=0; i<maxAttempts; i++){
                     newEnemy = {
-                        x: Math.random() * (canvas.width - 30) + 15,
+                        x: Math.random() * (canvas.width - 30 - enemiesSizeBase * 2) + 15 + enemiesSizeBase,
                         y: 0,
                         health: enemyHealthBase,
                         size: enemiesSizeBase, // 使用.size属性
@@ -169,6 +174,8 @@
                     enemySpawnTimer = Date.now();
                 }else{
                     console.log('无法找到有效生成位置');
+                    enemies.push(newEnemy);
+                    enemySpawnTimer = Date.now();
                 }
             }
 
@@ -240,14 +247,29 @@
                 // 显示数值
                 ctx.fillStyle = '#000';
                 ctx.font = '12px Arial';
-                ctx.fillText(
-                    `${barrier.type}: ${barrier.leftValue.toFixed(1)}`, 
-                    canvas.width/4, barrier.y + 15
-                );
-                ctx.fillText(
-                    `${barrier.type}: ${barrier.rightValue.toFixed(1)}`, 
-                    canvas.width*3/4 + 10, barrier.y + 15
-                );
+                if (barrier.leftValue > 0){
+                    ctx.fillText(
+                        `${barrier.typel}: +${barrier.leftValue.toFixed(1)}`, 
+                        canvas.width/4, barrier.y + 15
+                    );
+                }else{
+                    ctx.fillText(
+                        `${barrier.typel}: ${barrier.leftValue.toFixed(1)}`, 
+                        canvas.width/4, barrier.y + 15
+                    );
+                }
+
+                if (barrier.rightValue > 0){
+                    ctx.fillText(
+                        `${barrier.typer}: +${barrier.rightValue.toFixed(1)}`, 
+                        canvas.width*3/4 + 10, barrier.y + 15
+                    );
+                }else{
+                    ctx.fillText(
+                        `${barrier.typer}: ${barrier.rightValue.toFixed(1)}`, 
+                        canvas.width*3/4 + 10, barrier.y + 15
+                    );
+                }
             });
         }
 
@@ -259,13 +281,16 @@
 
             bullets.forEach((bullet, bIndex) => {
                 enemies.forEach((enemy, eIndex) => {
-                    const distance = Math.sqrt(
-                        (bullet.x - enemy.x)**2 + (bullet.y - enemy.y)**2
-                    );
-                    if(distance < enemy.size + player.bulletWidth/2) {
+                    const xDistance = Math.abs(bullet.x - enemy.x);
+
+                    if(xDistance < enemy.size + player.bulletWidth/2 && bullet.y <= enemy.y + enemy.size + player.bulletWidth && bullet.y > enemy.y + enemy.size + player.bulletWidth - player.bulletSpeed* (deltaTime / 8.335) - enemy.speed* (deltaTime / 8.335)) {
                         enemy.health -= player.damage;
                         enemy.y=Math.max(1,enemy.y-kickbackDistance);
-                        bulletsToRemove.add(bIndex);
+                        bullet.c-=1;
+                        bullet.y-=player.bulletSpeed* (deltaTime / 8.335);
+                        if (bullet.c<1){
+                            bulletsToRemove.add(bIndex);
+                        }
                         if(enemy.health <= 0) {
                             enemiesToRemove.add(eIndex);
                             score += 10;
@@ -290,12 +315,17 @@
             ctx.fillStyle = '#fff';
             ctx.font = '20px Arial';
             ctx.fillText(`分数: ${score}`, 50, 30);
-            // ctx.fillText(`伤害: ${player.damage.toFixed(1)}`, 50, 120);
-            // ctx.fillText(`攻速: ${(1000/player.fireRate).toFixed(1)}`, 50, 90);
+             ctx.fillText(`伤害: ${player.damage.toFixed(1)}`, 50, 120);
+             ctx.fillText(`攻速: ${(1000/player.fireRate).toFixed(1)}`, 50, 90);
             ctx.fillText(`时间: ${(gameTime)}`, 50, 60);
-            // ctx.fillText(`De: ${(damageDe.toFixed(2))}`, 50, 150);
-            // ctx.fillText(`EHR: ${(enemyHealthRate.toFixed(2))}`, 50, 210);
+             ctx.fillText(`De: ${(damageDe.toFixed(2))}`, 50, 150);
+             ctx.fillText(`BW: ${(bulletWeight.toFixed(2))}`, 50, 180);
             
+            // if(stops) {
+            //     ctx.fillStyle = '#fff';
+            //     ctx.font = '40px Arial';
+            //     ctx.fillText('暂停', canvas.width/2, canvas.height/2);
+            // }
             if(gameOver) {
                 ctx.fillStyle = '#f00';
                 ctx.font = '40px Arial';
@@ -307,6 +337,9 @@
         function stop() {
             stops = !stops;
             if (stops) {
+                ctx.fillStyle = '#fff';
+                ctx.font = '50px Arial';
+                ctx.fillText('暂停', canvas.width/2, canvas.height/2);
                 stopTime = Date.now();
                 clearInterval(interval);
                 clearInterval(interval2);
@@ -344,24 +377,28 @@
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 玩家移动
-            if(keys.ArrowLeft) player.x = Math.max(10, player.x - player.speed);
-            if(keys.ArrowRight) player.x = Math.min(canvas.width-10, player.x + player.speed);
+            // // 玩家移动
+            // if(keys.ArrowLeft) player.x = Math.max(10, player.x - player.speed);
+            // if(keys.ArrowRight) player.x = Math.min(canvas.width-10, player.x + player.speed);
             // 更新玩家位置
             player.x = mouseX;
 
             // 自动射击
             if(Date.now() - lastFire > player.fireRate) {
+                const fires = Math.floor((Date.now() - lastFire)/player.fireRate);
                 const spreadStep = player.bulletSpread;
                 const startOffset = -(player.bulletCount-1)*spreadStep/2;
                 
-                for(let i=0; i<player.bulletCount; i++){
-                    bullets.push({
-                        x: player.x + startOffset + i*spreadStep,
-                        y: player.y
-                    });
+                for (let j=0; j<fires; j++){
+                    for(let i=0; i<player.bulletCount; i++){
+                        bullets.push({
+                            c: player.bulletX,
+                            x: player.x + startOffset + i*spreadStep,
+                            y: player.y + j * ((player.bulletSpeed* (deltaTime / 8.335))/fires)
+                        });
+                    }
                 }
-                lastFire = Date.now();
+                lastFire += fires * player.fireRate;
             }
 
             // 更新游戏对象
@@ -377,6 +414,7 @@
             drawEnemies();
             drawBarriers();
             drawUI();
+            lastDelta = deltaTime;
             setTimeout(gameLoop, 16.667);
         }
 
@@ -387,9 +425,9 @@
         }
 
         // 事件监听
-        const keys = { ArrowLeft: false, ArrowRight: false };
-        window.addEventListener('keydown', e => keys[e.key] = true);
-        window.addEventListener('keyup', e => keys[e.key] = false);
+        // const keys = { ArrowLeft: false, ArrowRight: false };
+        // window.addEventListener('keydown', e => keys[e.key] = true);
+        // window.addEventListener('keyup', e => keys[e.key] = false);
         restartBtn.addEventListener('click', () => {
             initGame();
             gameLoop();
@@ -450,7 +488,7 @@
             const weights = [];    // 概率权重数组
             
             // 根据当前数量生成权重（越接近上限概率越低）
-            for(let i=1; i<=4; i++){ // 最大+4
+            for(let i=1; i<=5; i++){ // 最大+4
                 const possible = currentCount + i;
                 if(possible > MAX_BULLETS) continue;
                 weights.push({
@@ -475,39 +513,43 @@
         function updateBarriers() {
             // 每5秒生成屏障
             if(gameTime%5 ==0 && barrierCD == false) {
-                const bulletValueLeft = generateBulletPaths(player.bulletCount);
-                const bulletValueRight = generateBulletPaths(player.bulletCount);
+                let firstV = generateBulletPaths(player.bulletCount);
+                let secV = generateBulletPaths(player.bulletCount);
+                let ltypes = '弹道';
+                let rtypes = '弹道';
+
                 bulletWeight = (player.bulletCount/1.5)**(1/2);
-                
-                if(Math.random()*bulletWeight > 0.2 || (bulletValueLeft == 0 && bulletValueRight == 0)){
-                    let firstV = 2*(Math.random()*5 - 3);
-                    let secV = 2*(Math.random()*5 - 3);
-                    if(firstV < 0){
-                        secV = Math.random()*3 +1;
-                    } 
-                    if(secV < 0){
-                        firstV = Math.random()*3 +1;
-                    } 
-                    let types = '攻速'
-                    if (Math.random()>0.35){
-                        types = '伤害';
+                if(Math.random()*bulletWeight > 0.1){
+                    firstV = 2*(Math.random()*5 - 3);
+                    ltypes = '攻速';
+                    if (Math.random()>0.35 || player.fireRate <= 5){
+                        ltypes = '伤害';
                         firstV *= enemyHealthBase/5/damageDe;
+                    }
+                }
+                if(Math.random()*bulletWeight > 0.1){
+                    secV = 2*(Math.random()*5 - 3);
+                    rtypes = '攻速';
+                    if (Math.random()>0.35 || player.fireRate <= 5){
+                        rtypes = '伤害';
                         secV *= enemyHealthBase/5/damageDe;
                     }
-                    barriers.push({
-                        y: 0,
-                        leftValue: firstV,  // [-2,3]
-                        rightValue: secV,
-                        type: types
-                    });
-                }else{
-                    barriers.push({
-                        y: 0,
-                        leftValue: bulletValueLeft,
-                        rightValue: bulletValueRight,
-                        type: '弹道'
-                    });
                 }
+
+                if(Math.random()>0.5){
+                    if (firstV<0 && secV<0) firstV = -firstV;
+                }else{
+                    if (firstV<0 && secV<0) secV = -secV;
+                }
+
+
+                barriers.push({
+                    y: 0,
+                    leftValue: firstV,  // [-2,3]
+                    rightValue: secV,
+                    typel: ltypes,
+                    typer: rtypes
+                });
 
 
                 
@@ -531,12 +573,13 @@
         // 修改后的升级应用
         function applyUpgrade(barrier) {
             const area = player.x < canvas.width/2 ? 'leftValue' : 'rightValue';
+            const types = barrier[(player.x < canvas.width/2 ? 'typel' : 'typer')];
             const value = barrier[area];
             
-            switch(barrier.type) {
+            switch(types) {
                 case '攻速':
-                    if (player.fireRate >1.01 ){
-                        player.fireRate = Math.max(1, player.fireRate - Math.floor(0.5+value*player.fireRate/10));
+                    if (player.fireRate >= 5 ){
+                        player.fireRate = Math.max(5, player.fireRate - Math.floor(0.5+value*player.fireRate/10));
                         // if (player.fireRate - value*50 < 100){
                         //     player.fireRate = Math.max(1, player.fireRate - Math.floor(value*player.fireRate/10));
                         // }else{
@@ -582,14 +625,14 @@
                 if (damageDe >= 200){
                     damageDe *= 1.01;
                 }else{
-                    damageDe = Math.min(200,1.2*damageDe);
+                    damageDe = Math.min(400,1.2*damageDe);
                 }
                 enemyHealthRate = Math.max(1.2,enemyHealthRate/1.02);
                 enemyHealthBase *= enemyHealthRate;
                 enemySpawnRate = Math.max(50, enemySpawnRate*0.9);
                 enemiesSizeBase = Math.min(30,enemiesSizeBase*1.05);
                 fillSpeedBase = Math.min(2.5,fillSpeedBase+0.02);
-                kickbackDistance = Math.max(0.15,kickbackDistance*0.9)
+                kickbackDistance = Math.max(0.06,kickbackDistance*0.9)
             }
         }
 
@@ -602,7 +645,7 @@
                 // 生成有效位置
                 for(let i=0; i<maxAttempts; i++){
                     newEnemy = {
-                        x: Math.random() * (canvas.width - 30) + 15,
+                        x: Math.random() * (canvas.width - 30 - enemiesSizeBase*6) + 15 + enemiesSizeBase*3,
                         y: 0,
                         health: enemyHealthBase*10*Math.log(gameTime**(1/2)),
                         size: enemiesSizeBase*3, // 使用.size属性
