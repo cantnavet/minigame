@@ -2,11 +2,11 @@
 <html>
 <head>
     <meta charset = "UTF-8">
-    <title>射击游戏</title>
+    <title>minigame</title>
     <style>
         body {
             margin: 0;
-            overflow: hidden; /* 防止滚动条出现 */
+            overflow: hidden; 
         }
         canvas { border: 1px solid white }
         canvas {
@@ -34,7 +34,6 @@
         const ctx = canvas.getContext('2d');
         const restartBtn = document.getElementById('restartBtn');
 
-        // 初始化游戏对象
         let bulletWeight;
         let kickbackDistance;
         let damageDe = 1;
@@ -43,7 +42,7 @@
         let deltaTime;
         let lastFrameTime = Date.now();
         const Maxbullets = 50;
-        const minFrameTime = 1000 / 60; // 限制到60FPS
+        const minFrameTime = 1000 / 60;
         let enemiesSizeBase = 15;
         let fallSpeedBase = 0.7;
         let player, bullets, enemies, barriers, lastFire, gameOver, stops;
@@ -64,22 +63,18 @@
         let difficultyApplyed;
 
         function resizeCanvas() {
-            // 获取窗口的宽度和高度
             const windowWidth = window.innerWidth;
             const windowHeight = window.innerHeight;
 
-            // 定义逻辑画布尺寸（可以根据需要调整）
-            const logicalWidth = canvas.width; // 逻辑宽度
-            const logicalHeight = canvas.height; // 逻辑高度
+            const logicalWidth = canvas.width; 
+            const logicalHeight = canvas.height; 
 
             // 计算缩放比例
             scale = Math.min((windowWidth-50) / logicalWidth, windowHeight / logicalHeight);
 
-            // 设置 Canvas 的显示大小（CSS 样式）
+            // 设置 Canvas 的显示大小（CSS）
             canvas.style.width = `${logicalWidth * scale}px`;
             canvas.style.height = `${logicalHeight * scale}px`;
-
-            // 应用缩放变换到绘图上下文
             
         }
         resizeCanvas();
@@ -119,20 +114,18 @@
             enemySpawnRate = 2000;
             fillSpeedBase = 0.7
             lastFire = Date.now();
-            mouseX = canvas.width/2;  // 重置鼠标位置
+            mouseX = canvas.width/2;  
             restartBtn.style.display = 'none';
             lastDelta = 0;
             difficultyApplyed = false;
         }
 
-                // 添加鼠标事件监听
         document.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
             mouseX = e.clientX - rect.left;
             // ctx.fillStyle = '#fff';
             // ctx.fillText(`Test: ${((e.clientY))}`, 50, 240);
 
-            // 限制在canvas范围内
             if (!(mouseX >= 10 && mouseX <= (canvas.width - 10)* scale) || e.clientY - rect.top <= canvas.height* scale/2){
                 if (e.clientY - rect.top <= canvas.height* scale/2){
                     mouseX = player.x* scale;
@@ -188,13 +181,12 @@
                 let newEnemy = null;
                 let isValidPosition = false;
                 
-                // 生成有效位置
                 for(let i=0; i<maxAttempts; i++){
                     newEnemy = {
                         x: Math.random() * (canvas.width - 30 - enemiesSizeBase * 2) + 15 + enemiesSizeBase,
                         y: 0,
                         health: enemyHealthBase,
-                        size: enemiesSizeBase, // 使用.size属性
+                        size: enemiesSizeBase, 
                         speed: fillSpeedBase,
                         maxHealth: enemyHealthBase,
                         boss: 0
@@ -207,7 +199,6 @@
                     }
                 }
 
-                // 如果找到有效位置则添加
                 if(isValidPosition){
                     enemies.push(newEnemy);
                     enemySpawnTimer = Date.now();
@@ -231,13 +222,11 @@
 
         function drawEnemies() {
             enemies.forEach(enemy => {
-                // 绘制敌人主体
                 ctx.fillStyle = `hsl(${enemy.health * 20 /enemy.maxHealth * (3+Math.log(1+enemy.health))}, 70%, 50%)`;
                 ctx.beginPath();
                 ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // 绘制血条背景
                 ctx.fillStyle = 'rgba(0,0,0,0.5)';
                 if (enemy.boss<1){
                     ctx.fillRect(enemy.x - 20, enemy.y - 10 - enemy.size, 40, 5);
@@ -245,7 +234,6 @@
                     ctx.fillRect(enemy.x - 40, enemy.y - 10 - enemy.size, 80, 5);
                 }
                 
-                // 绘制当前血量
                 const healthWidth = (enemy.health / enemy.maxHealth) * 36;
                 ctx.fillStyle = enemy.health > enemyHealthBase*0.4 ? '#0f0' : '#f00';
                 if (enemy.boss<1){
@@ -254,29 +242,26 @@
                     ctx.fillRect(enemy.x - 38, enemy.y - 8 - enemy.size, healthWidth*2, 2);
                 }
 
-                // 显示具体数值（带描边效果）
                 ctx.font = '15px Impact';
                 ctx.textAlign = 'center';
                 ctx.lineWidth = 3;
                 
-                // 描边
                 ctx.strokeStyle = '#000';
                 ctx.strokeText(enemy.health.toFixed(1), enemy.x, enemy.y - 15 - enemy.size);
                 ctx.strokeStyle = 'rgba(255,255,255,0)';
-                // 文字
+
                 ctx.fillStyle = '#FFF';
                 ctx.fillText(enemy.health.toFixed(1), enemy.x, enemy.y - 15 - enemy.size);
             });
             }
 
-        // 屏障系统
+        // 加成屏障系统
         function drawBarriers() {
             barriers.forEach(barrier => {
-                // 绘制左侧区域
+
                 ctx.fillStyle = barrier.leftValue >= 0 ? '#0f0' : '#f00';
                 ctx.fillRect(0, barrier.y, canvas.width/2, 20);
                 
-                // 绘制右侧区域
                 ctx.fillStyle = barrier.rightValue >= 0 ? '#0f0' : '#f00';
                 ctx.fillRect(canvas.width/2, barrier.y, canvas.width/2, 20);
 
@@ -312,8 +297,7 @@
             });
         }
 
-            // 碰撞检测
-        // 修复后的碰撞检测
+        // 碰撞检测
         function checkCollisions() {
             const bulletsToRemove = new Set();
             const enemiesToRemove = new Set();
@@ -340,7 +324,6 @@
                 }
             });
 
-            // 反向删除保证索引正确
             Array.from(bulletsToRemove).reverse().forEach(i => bullets.splice(i, 1));
             Array.from(enemiesToRemove).reverse().forEach(i => enemies.splice(i, 1));
         }
@@ -350,18 +333,17 @@
             ctx.fillStyle = '#fff';
             ctx.font = '20px Arial';
             ctx.fillText(`分数: ${score}`, 50, 30);
-              // ctx.fillText(`伤害: ${player.damage.toFixed(1)}`, 50, 120);
-              // ctx.fillText(`攻速: ${(1000/player.fireRate).toFixed(1)}`, 50, 90);
+            //  ctx.fillText(`伤害: ${player.damage.toFixed(1)}`, 50, 120);
+            //  ctx.fillText(`攻速: ${(1000/player.fireRate).toFixed(1)}`, 50, 90);
             ctx.fillText(`时间: ${(gameTime)}`, 50, 60);
-              // ctx.fillText(`De: ${(damageDe.toFixed(2))}`, 50, 150);
-              // ctx.fillText(`BW: ${(bulletWeight.toFixed(2))}`, 50, 180);
-              // ctx.fillText(`EHR: ${(enemyHealthRate.toFixed(2))}`, 50, 210);
-              // ctx.fillText(`ESR: ${(enemySpawnRate.toFixed(2))}`, 50, 240);
+            //  ctx.fillText(`De: ${(damageDe.toFixed(2))}`, 50, 150);
+            //  ctx.fillText(`BW: ${(bulletWeight.toFixed(2))}`, 50, 180);
+            //  ctx.fillText(`EHR: ${(enemyHealthRate.toFixed(2))}`, 50, 210);
+            //  ctx.fillText(`ESR: ${(enemySpawnRate.toFixed(2))}`, 50, 240);
             
             ctx.fillStyle = 'rgba(255,255,255,0.08)';
             ctx.fillRect(0, canvas.height-30, canvas.width, 30);
 
-            // 绘制线条
             ctx.stroke();
             if(gameOver) {
                 ctx.fillStyle = '#f00';
@@ -419,10 +401,8 @@
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // // 玩家移动
             // if(keys.ArrowLeft) player.x = Math.max(10, player.x - player.speed);
             // if(keys.ArrowRight) player.x = Math.min(canvas.width-10, player.x + player.speed);
-            // 更新玩家位置
             player.x = mouseX / scale;
 
             // 自动射击
@@ -460,13 +440,11 @@
             setTimeout(gameLoop, 16.667);
         }
 
-        // 玩家绘制
         function drawPlayer() {
             ctx.fillStyle = '#00f';
             ctx.fillRect(player.x-10, player.y, 20, 10);
         }
 
-        // 事件监听
         // const keys = { ArrowLeft: false, ArrowRight: false };
         // window.addEventListener('keydown', e => keys[e.key] = true);
         // window.addEventListener('keyup', e => keys[e.key] = false);
@@ -480,13 +458,11 @@
         gameLoop();
 
         
-
-        // 鼠标和触摸事件的处理函数
         function startIncrement() {
             if (stops) return;
             interval = setInterval(() => {
                 moveRight();
-            }, 10); // 每100毫秒增加一次
+            }, 10); 
         }
 
         function stopIncrement() {
@@ -497,40 +473,37 @@
             if (stops) return;
             interval2 = setInterval(() => {
                 moveLeft();
-            }, 10); // 每100毫秒增加一次
+            }, 10); 
         }
 
         function stopIncrement2() {
             clearInterval(interval2);
         }
 
-        // 对于鼠标
         buttonR.addEventListener('mousedown', startIncrement);
         buttonR.addEventListener('mouseup', stopIncrement);
-        buttonR.addEventListener('mouseleave', stopIncrement); // 当鼠标离开按钮区域时停止
+        buttonR.addEventListener('mouseleave', stopIncrement); 
         buttonL.addEventListener('mousedown', startIncrement2);
         buttonL.addEventListener('mouseup', stopIncrement2);
-        buttonL.addEventListener('mouseleave', stopIncrement2); // 当鼠标离开按钮区域时停止
+        buttonL.addEventListener('mouseleave', stopIncrement2); 
 
-
-        // 对于触摸设备
         buttonR.addEventListener('touchstart', (event) => {
-            event.preventDefault(); // 防止默认行为，例如滚动页面
+            event.preventDefault(); /
             startIncrement();
         });
         buttonR.addEventListener('touchend', stopIncrement);
         buttonL.addEventListener('touchstart', (event) => {
-            event.preventDefault(); // 防止默认行为，例如滚动页面
+            event.preventDefault(); 
             startIncrement2();
         });
         buttonL.addEventListener('touchend', stopIncrement2);
 
         function generateBulletPaths(currentCount) {
-            const MAX_BULLETS = Maxbullets; // 最大弹道数量
-            const weights = [];    // 概率权重数组
+            const MAX_BULLETS = Maxbullets; 
+            const weights = [];   
             
             // 根据当前数量生成权重（越接近上限概率越低）
-            for(let i=1; i<=5; i++){ // 最大+4
+            for(let i=1; i<=5; i++){ // 最大+5
                 const possible = currentCount + i;
                 if(possible > MAX_BULLETS) continue;
                 weights.push({
@@ -551,7 +524,6 @@
             return 1;
         }
 
-        // 核心机制示例代码：
         function updateBarriers() {
             // 每5秒生成屏障
             if(gameTime%5 ==0 && barrierCD == false) {
@@ -606,7 +578,6 @@
                 barrierCD = false;
             }
 
-                // 使用临时数组记录需要移除的屏障
             const barriersToRemove = [];
             barriers.forEach(barrier => {
                 barrier.y += fallSpeedBase* (deltaTime / 8.335);
@@ -618,7 +589,6 @@
             barriers = barriers.filter(b => !barriersToRemove.includes(b));
         }
 
-        // 修改后的升级应用
         function applyUpgrade(barrier) {
             const area = player.x < canvas.width/2 ? 'leftValue' : 'rightValue';
             const types = barrier[(player.x < canvas.width/2 ? 'typel' : 'typer')];
@@ -641,9 +611,8 @@
                     player.damage += value;
                     break;
                 case '弹道':
-                    // 新的弹道升级逻辑
                     player.bulletCount = Math.min(
-                        Maxbullets, // 上限
+                        Maxbullets, 
                         Math.max(1, player.bulletCount + value)
                     );
                     break;
@@ -658,7 +627,7 @@
                 return true;
             }
 
-            // 与现有敌人的碰撞检测
+            // 敌人碰撞检测
             return enemies.some(existingEnemy => {
                 const dx = newEnemy.x - existingEnemy.x;
                 const dy = newEnemy.y - existingEnemy.y;
@@ -674,7 +643,7 @@
                 if (damageDe >= 1250){
                     damageDe *= 1.02;
                 }else{
-                    damageDe = Math.min(1250,Math.max(1.1,enemyHealthRate/1.13)*damageDe);
+                    damageDe = Math.min(1250,Math.max(1.15,enemyHealthRate/1.17)*damageDe);
                 }
                 enemyHealthRate = Math.max(1.2,enemyHealthRate/1.008);
                 enemyHealthBase *= enemyHealthRate;
@@ -699,7 +668,7 @@
                         x: Math.random() * (canvas.width - 30 - enemiesSizeBase*6) + 15 + enemiesSizeBase*3,
                         y: 0,
                         health: enemyHealthBase*10*Math.log(gameTime**(1/2)),
-                        size: enemiesSizeBase*3, // 使用.size属性
+                        size: enemiesSizeBase*3,
                         speed: fillSpeedBase/2.5,
                         maxHealth: enemyHealthBase*10*Math.log(gameTime**(1/2)),
                         boss: 1
