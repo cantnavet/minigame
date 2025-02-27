@@ -18,7 +18,7 @@
 </head>
 <body bgcolor="333333">
     <span style="display: flex;">
-        <canvas id="gameCanvas" width="600" height="700"></canvas>
+        <canvas id="gameCanvas" width="600" height="800"></canvas>
         <div>
             <button id="stop" style="width: 50px; height: 50px;" onclick="stop();">| |</button>
             <button id="restartBtn" style="height: 50px;">↺</button>
@@ -69,8 +69,8 @@
             const windowHeight = window.innerHeight;
 
             // 定义逻辑画布尺寸（可以根据需要调整）
-            const logicalWidth = 600; // 逻辑宽度
-            const logicalHeight = 700; // 逻辑高度
+            const logicalWidth = canvas.width; // 逻辑宽度
+            const logicalHeight = canvas.height; // 逻辑高度
 
             // 计算缩放比例
             scale = Math.min((windowWidth-50) / logicalWidth, windowHeight / logicalHeight);
@@ -150,8 +150,16 @@
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
             mouseX = e.touches[0].clientX - rect.left;
-            if (!(mouseX >= 10 && mouseX <= canvas.width - 10) || e.touches[0].clientY - rect.top <= canvas.height/2){
-                mouseX = player.x;
+            if (!(mouseX >= 10 && mouseX <= (canvas.width - 10)* scale) || e.touches[0].clientY - rect.top <= canvas.height/2){
+                if (e.clientY - rect.top <= canvas.height* scale/2){
+                    mouseX = player.x* scale;
+                }else{
+                    if(mouseX < 10){
+                        mouseX = 10;
+                    }else if(mouseX > (canvas.width - 10)* scale){
+                        mouseX = (canvas.width - 10)* scale;
+                    }
+                }
             }
         });
 
