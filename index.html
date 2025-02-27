@@ -291,10 +291,6 @@
                         if (bullet.c<1){
                             bulletsToRemove.add(bIndex);
                         }
-                        if(enemy.health <= 0) {
-                            enemiesToRemove.add(eIndex);
-                            score += 10;
-                        }
                     }
                 });
             });
@@ -495,7 +491,7 @@
                 if(possible > MAX_BULLETS) continue;
                 weights.push({
                     value: i,
-                    weight: 1/(i*(i*i*i)**(1/(1+gameTime**0.6/8))) // 权重衰减，反正这玩意5秒才跑一次，POW随便造（）
+                    weight: 1/(i*(i**4)**(1/(1+gameTime**0.6/8))) // 权重衰减，反正这玩意5秒才跑一次，POW随便造（）
                 });
             }
             
@@ -520,7 +516,7 @@
                 let ltypes = '弹道';
                 let rtypes = '弹道';
 
-                bulletWeight = (player.bulletCount)**(0.7)/(1+(gameTime**0.7)/25);
+                bulletWeight = 0.5+(player.bulletCount)**(0.7)/(1+(gameTime**0.75)/25);
                 if(Math.random()*bulletWeight > 0.1 || player.bulletCount>=Maxbullets){
                     firstV = 2*(Math.random()*5 - 3);
                     ltypes = '攻速';
@@ -529,7 +525,7 @@
                         firstV *= enemyHealthBase/5/damageDe;
                         firstV += firstV>=0?0.5:-0.5;
                     }else{
-                        firstV += firstV>=0?0.25:-0.25;
+                        firstV += firstV>=0?0.1:-0.1;
                     }
                 }
                 if(Math.random()*bulletWeight > 0.1 || player.bulletCount>=Maxbullets){
@@ -540,7 +536,7 @@
                         secV *= enemyHealthBase/5/damageDe;
                         secV += secV>=0?0.5:-0.5;
                     }else{
-                        secV += secV>=0?0.25:-0.25;
+                        secV += secV>=0?0.1:-0.1;
                     }
                 }
 
@@ -633,11 +629,11 @@
                 if (damageDe >= 1000){
                     damageDe *= 1.02;
                 }else{
-                    damageDe = Math.min(1000,Math.max(1.2,enemyHealthRate/1.055)*damageDe);
+                    damageDe = Math.min(1000,Math.max(enemyHealthRate/1.12)*damageDe);
                 }
                 enemyHealthRate = Math.max(1.2,enemyHealthRate/1.008);
                 enemyHealthBase *= enemyHealthRate;
-                enemySpawnRate = Math.max(50, enemySpawnRate*0.92);
+                enemySpawnRate = Math.max(50, enemySpawnRate*0.935/(1+1/(gameTime**0.5/10)));
                 enemiesSizeBase = Math.min(30,enemiesSizeBase*1.05);
                 fillSpeedBase = Math.min(2.5,fillSpeedBase+0.02);
                 kickbackDistance = Math.max(0.06,kickbackDistance*0.9)
