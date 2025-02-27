@@ -629,11 +629,11 @@
                 if (damageDe >= 1000){
                     damageDe *= 1.02;
                 }else{
-                    damageDe = Math.min(1000,Math.max(enemyHealthRate/1.12)*damageDe);
+                    damageDe = Math.min(1000,Math.max(enemyHealthRate/1.13)*damageDe);
                 }
                 enemyHealthRate = Math.max(1.2,enemyHealthRate/1.008);
                 enemyHealthBase *= enemyHealthRate;
-                enemySpawnRate = Math.max(50, enemySpawnRate*0.935/(1+1/(gameTime**0.5/10)));
+                enemySpawnRate = Math.max(50, enemySpawnRate*1/(0.945+1/((gameTime**0.22*2.5))));
                 enemiesSizeBase = Math.min(30,enemiesSizeBase*1.05);
                 fillSpeedBase = Math.min(2.5,fillSpeedBase+0.02);
                 kickbackDistance = Math.max(0.06,kickbackDistance*0.9)
